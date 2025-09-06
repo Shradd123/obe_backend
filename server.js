@@ -58,6 +58,9 @@ const teachingAssignmentRoutes = require("./routes/teachingAssignmentRoutes");
 
 // Routes
 app.use("/api/assignments", teachingAssignmentRoutes);
+const courseCoverRoutes = require("./routes/courseCoverRoutes");
+app.use("/api", courseCoverRoutes);
+
 
 
 
