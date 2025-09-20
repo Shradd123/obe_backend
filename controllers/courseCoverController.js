@@ -7,7 +7,7 @@ const getCourseCover = async (req, res) => {
   try {
     const { facultyId, courseId } = req.params;
 
-    // Try fetching from course_cover_page
+    // Try fetching from course_cover_page first
     const [rows] = await dbPool.query(
       `SELECT * FROM course_cover_page WHERE faculty_id = ? AND course_id = ?`,
       [facultyId, courseId]
@@ -17,7 +17,7 @@ const getCourseCover = async (req, res) => {
       return res.json(rows[0]);
     }
 
-    // fallback if not found
+    // If not found, fallback to dynamically fetch from DB
     const [fallbackRows] = await dbPool.query(
       `
       SELECT 
@@ -25,18 +25,26 @@ const getCourseCover = async (req, res) => {
         c.name AS courseName,
         c.code AS courseCode,
         c.nba AS nbaCode,
-        'N/A' AS semesterSection,
-        'N/A' AS academicYear,
-        'N/A' AS facultyIncharge,
-        'N/A' AS courseCoordinator
+        CONCAT('Sem ', s.sem, ' - ', sec.name) AS semesterSection,
+        CONCAT(b.start_year, '-', b.end_year) AS academicYear,
+        MAX(CASE WHEN cta.role = 'instructor' THEN f.name END) AS facultyIncharge,
+        MAX(CASE WHEN cta.role = 'coordinator' THEN f.name END) AS courseCoordinator,
+        MAX(f.faculty_id) AS facultyId
       FROM course c
+      LEFT JOIN course_offering co ON co.course_id = c.course_id
+      LEFT JOIN sem s ON s.sem_id = co.sem_id
+      LEFT JOIN batch b ON b.batch_id = co.batch_id
+      LEFT JOIN course_teaching_assignment cta ON cta.offering_id = co.offering_id
+      LEFT JOIN faculty f ON f.faculty_id = cta.faculty_id
+      LEFT JOIN section sec ON sec.section_id = cta.section_id
       WHERE c.course_id = ?
+      GROUP BY c.course_id, c.name, c.code, c.nba, s.sem, sec.name, b.start_year, b.end_year
       LIMIT 1
       `,
       [courseId]
     );
 
-    if (fallbackRows.length === 0) {
+    if (!fallbackRows.length || !fallbackRows[0].course_id) {
       return res.status(404).json({ message: "Course cover not found" });
     }
 
@@ -97,4 +105,48 @@ const upsertCourseCover = async (req, res) => {
   }
 };
 
-module.exports = { getCourseCover, upsertCourseCover };
+// ============================
+// FALLBACK: courseId only (dynamic from DB)
+// ============================
+const getCourseCoverFallback = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    const [rows] = await dbPool.query(
+      `
+      SELECT 
+        c.course_id,
+        c.name AS courseName,
+        c.code AS courseCode,
+        c.nba AS nbaCode,
+        CONCAT('Sem ', s.sem, ' - ', sec.name) AS semesterSection,
+        CONCAT(b.start_year, '-', b.end_year) AS academicYear,
+        MAX(CASE WHEN cta.role = 'instructor' THEN f.name END) AS facultyIncharge,
+        MAX(CASE WHEN cta.role = 'coordinator' THEN f.name END) AS courseCoordinator,
+        MAX(f.faculty_id) AS facultyId
+      FROM course c
+      LEFT JOIN course_offering co ON co.course_id = c.course_id
+      LEFT JOIN sem s ON s.sem_id = co.sem_id
+      LEFT JOIN batch b ON b.batch_id = co.batch_id
+      LEFT JOIN course_teaching_assignment cta ON cta.offering_id = co.offering_id
+      LEFT JOIN faculty f ON f.faculty_id = cta.faculty_id
+      LEFT JOIN section sec ON sec.section_id = cta.section_id
+      WHERE c.course_id = ?
+      GROUP BY c.course_id, c.name, c.code, c.nba, s.sem, sec.name, b.start_year, b.end_year
+      LIMIT 1
+      `,
+      [courseId]
+    );
+
+    if (!rows.length || !rows[0].course_id) {
+      return res.status(404).json({ message: "Course cover not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Error fetching fallback course cover:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { getCourseCover, upsertCourseCover, getCourseCoverFallback };
