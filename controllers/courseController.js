@@ -1,33 +1,7 @@
-// const { dbPool } = require("../config/db");
-
-// exports.addCourse = async (req, res) => {
-//   const { name, credits, code, nba } = req.body;
-//   try {
-//     const [result] = await dbPool.query(
-//       "INSERT INTO course (name, credits, code, nba) VALUES (?, ?, ?, ?)",
-//       [name, credits, code, nba]
-//     );
-//     res.json({ course_id: result.insertId });
-//   } catch (err) {
-//     console.error("Add course error:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
-
-// exports.getCourses = async (req, res) => {
-//   try {
-//     const [rows] = await dbPool.query("SELECT * FROM course");
-//     res.json(rows);
-//   } catch (err) {
-//     console.error("Fetch courses error:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
-
-
-
 const courseModel = require("../models/courseModel");
+const { dbPool } = require('../config/db');
 
+// Get all courses
 const getCourses = async (req, res) => {
   try {
     const courses = await courseModel.getAllCourses();
@@ -38,6 +12,7 @@ const getCourses = async (req, res) => {
   }
 };
 
+// Create new course
 const createCourse = async (req, res) => {
   try {
     const newCourse = await courseModel.addCourse(req.body);
@@ -48,6 +23,7 @@ const createCourse = async (req, res) => {
   }
 };
 
+// Update existing course
 const updateCourse = async (req, res) => {
   try {
     const updatedCourse = await courseModel.updateCourse(req.params.id, req.body);
@@ -58,6 +34,7 @@ const updateCourse = async (req, res) => {
   }
 };
 
+// Delete a course
 const deleteCourse = async (req, res) => {
   try {
     const result = await courseModel.deleteCourse(req.params.id);
@@ -68,8 +45,7 @@ const deleteCourse = async (req, res) => {
   }
 };
 
-const { dbPool } = require('../config/db'); // ✅ Destructure only db
-
+// Get all course types
 const getCourseTypes = async (req, res) => {
   try {
     const [rows] = await dbPool.query(`SELECT * FROM course_type`);
@@ -80,11 +56,16 @@ const getCourseTypes = async (req, res) => {
   }
 };
 
+// Add a new course type
 const addCourseType = async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
+
   try {
-    const [result] = await dbPool.query(`INSERT INTO course_type (name) VALUES (?)`, [name]);
+    const [result] = await dbPool.query(
+      `INSERT INTO course_type (name) VALUES (?)`, 
+      [name]
+    );
     res.json({ message: 'Course type added', id: result.insertId });
   } catch (err) {
     console.error(err);
@@ -92,36 +73,11 @@ const addCourseType = async (req, res) => {
   }
 };
 
-
-
-// Fetch courses for given batch + sem (via schema)
-const getCoursesByBatchSem = async (req, res) => {
-  const { batchId, semId } = req.params;
-  try {
-    const [rows] = await dbPool.query(`
-      SELECT c.course_id, c.code, c.name
-      FROM batch b
-      JOIN schema_course sc ON b.schema_id = sc.schema_id
-      JOIN course c ON sc.course_id = c.course_id
-      JOIN sem s ON sc.sem = s.sem
-      WHERE b.batch_id = ? AND s.sem_id = ?
-    `, [batchId, semId]);
-
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: "Error fetching courses", details: err });
-  }
-};
-
-
 module.exports = {
-  getCoursesByBatchSem,
   getCourses,
   createCourse,
   updateCourse,
   deleteCourse,
-    getCourseTypes, 
-    addCourseType,
-}
-
-
+  getCourseTypes, 
+  addCourseType,
+};
