@@ -57,6 +57,9 @@ app.use("/api/assignments", teachingAssignmentRoutes);
 // Course cover & vision-mission routes
 app.use("/api/course-cover-page", courseCoverRoutes);
 app.use('/api/vision-mission', visionMissionRoutes);
+const peoRoutes = require('./routes/peoRoutes');
+// ...
+app.use('/api/peos', peoRoutes);
 
 // Start server
 app.listen(PORT, () => {
