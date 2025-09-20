@@ -58,12 +58,9 @@ const teachingAssignmentRoutes = require("./routes/teachingAssignmentRoutes");
 
 // Routes
 app.use("/api/assignments", teachingAssignmentRoutes);
+
 const courseCoverRoutes = require("./routes/courseCoverRoutes");
-app.use("/api", courseCoverRoutes);
-
-
-
-
+app.use("/api/course-cover-page", courseCoverRoutes);
 
 
 app.listen(PORT, () => {
