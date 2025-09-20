@@ -20,11 +20,16 @@ const getCoursesByBatchSem = async (req, res) => {
       return res.json([]); // if schema not assigned, return empty
     }
 
-    // 2. Get courses for this schema + semester
+    // 2. Get courses for this schema + semester with course type
     const [courses] = await dbPool.query(
-      `SELECT c.course_id, c.code, c.name
+      `SELECT 
+          c.course_id, 
+          c.code, 
+          c.name, 
+          ct.name AS courseType
        FROM schema_course sc
        JOIN course c ON sc.course_id = c.course_id
+       LEFT JOIN course_type ct ON c.course_type_id = ct.course_type_id
        WHERE sc.schema_id = ? AND sc.sem = ?`,
       [schemaId, semId]
     );

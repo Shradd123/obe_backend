@@ -5,6 +5,4 @@ const { getCoursesByBatchSem } = require('../controllers/batchSemCoursesControll
 // GET /api/batch/:batchId/sem/:semId/courses
 router.get('/batch/:batchId/sem/:semId/courses', getCoursesByBatchSem);
 
-
-
 module.exports = router;
