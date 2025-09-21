@@ -55,6 +55,8 @@ app.use('/api/peos', peoRoutes);
 app.use('/api/timetable', timetableRoutes); // ✅ timetable routes mounted
 const curriculumGapRoutes = require('./routes/curriculumGapRoutes');
 app.use('/api', curriculumGapRoutes);
+const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
+app.use('/api/course-outcome', courseOutcomeRoutes);
 
 // Start server
 app.listen(PORT, () => {
