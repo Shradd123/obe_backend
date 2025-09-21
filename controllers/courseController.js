@@ -1,5 +1,5 @@
 const courseModel = require("../models/courseModel");
-const { dbPool } = require('../config/db');
+
 
 // Get all courses
 const getCourses = async (req, res) => {

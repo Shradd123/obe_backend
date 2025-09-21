@@ -53,6 +53,8 @@ app.use("/api/course-cover-page", courseCoverRoutes);
 app.use('/api/vision-mission', visionMissionRoutes);
 app.use('/api/peos', peoRoutes);
 app.use('/api/timetable', timetableRoutes); // ✅ timetable routes mounted
+const curriculumGapRoutes = require('./routes/curriculumGapRoutes');
+app.use('/api', curriculumGapRoutes);
 
 // Start server
 app.listen(PORT, () => {
