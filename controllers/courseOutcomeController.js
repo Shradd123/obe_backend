@@ -1,4 +1,5 @@
-const { db } = require('../config/db');
+// courseOutcomeController.js
+const { dbPool } = require('../config/db');
 
 // ====================
 // Get all COs for a given course
@@ -6,16 +7,14 @@ const { db } = require('../config/db');
 exports.getAll = async (req, res) => {
   const course_id = Number(req.params.course_id);
   console.log('👉 Received course_id param:', req.params.course_id);
-  console.log('👉 Converted course_id:', course_id);
-  console.log('👉 Type of course_id:', typeof course_id);
 
   try {
     // Debug: show all courses in DB
-    const [allCourses] = await db.query('SELECT * FROM course');
+    const [allCourses] = await dbPool.query('SELECT * FROM course');
     console.log('👉 All courses in DB:', allCourses);
 
     // Verify course exists
-    const [course] = await db.query('SELECT * FROM course WHERE course_id = ?', [course_id]);
+    const [course] = await dbPool.query('SELECT * FROM course WHERE course_id = ?', [course_id]);
     console.log('👉 Course check result:', course);
 
     if (!course.length) {
@@ -23,10 +22,13 @@ exports.getAll = async (req, res) => {
     }
 
     // Fetch COs (can be empty)
-    const [rows] = await db.query('SELECT * FROM course_outcome WHERE course_id = ?', [course_id]);
+    const [rows] = await dbPool.query(
+      'SELECT co_id, co_no AS coNo, description, bloom_level AS bloomLevel FROM course_outcome WHERE course_id = ?',
+      [course_id]
+    );
     console.log('👉 COs fetched:', rows);
 
-    return res.json(rows);
+    return res.json(rows); // ✅ returns [] if none
   } catch (err) {
     console.error('❌ Error fetching COs:', err);
     return res.status(500).json({ message: 'Error fetching course outcomes' });
@@ -48,14 +50,12 @@ exports.create = async (req, res) => {
   }
 
   try {
-    const [course] = await db.query('SELECT * FROM course WHERE course_id = ?', [course_id]);
-    console.log('👉 Course check result (POST):', course);
-
+    const [course] = await dbPool.query('SELECT * FROM course WHERE course_id = ?', [course_id]);
     if (!course.length) {
       return res.status(404).json({ message: `Course with id=${course_id} not found` });
     }
 
-    const [result] = await db.query(
+    const [result] = await dbPool.query(
       `INSERT INTO course_outcome (course_id, co_no, description, bloom_level) 
        VALUES (?, ?, ?, ?)`,
       [course_id, coNo, description, bloomLevel]
@@ -89,7 +89,7 @@ exports.update = async (req, res) => {
   }
 
   try {
-    const [result] = await db.query(
+    const [result] = await dbPool.query(
       `UPDATE course_outcome 
        SET co_no = ?, description = ?, bloom_level = ? 
        WHERE co_id = ?`,
@@ -115,7 +115,7 @@ exports.remove = async (req, res) => {
   console.log('👉 Delete CO_id:', co_id);
 
   try {
-    const [result] = await db.query(`DELETE FROM course_outcome WHERE co_id = ?`, [co_id]);
+    const [result] = await dbPool.query(`DELETE FROM course_outcome WHERE co_id = ?`, [co_id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Course outcome not found' });

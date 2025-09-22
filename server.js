@@ -21,7 +21,10 @@ const teachingAssignmentRoutes = require("./routes/teachingAssignmentRoutes");
 const courseCoverRoutes = require("./routes/courseCoverRoutes");
 const visionMissionRoutes = require('./routes/visionMissionRoutes');
 const peoRoutes = require('./routes/peoRoutes');
-const timetableRoutes = require('./routes/timetableRouter'); // ✅ timetable router
+const timetableRoutes = require('./routes/timetableRouter'); 
+const curriculumGapRoutes = require('./routes/curriculumGapRoutes');
+const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
+const poRoutes = require('./routes/poRoutes'); // ✅ PO routes
 
 const app = express();
 const PORT = 5001;
@@ -30,8 +33,6 @@ const PORT = 5001;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// Serve uploaded files statically (e.g., timetables, course covers, etc.)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
@@ -46,17 +47,18 @@ app.use("/api/section", sectionRoutes);
 app.use("/api/student", studentRoutes);
 app.use('/sem', semRouter);
 app.use('/batch-sem', batchSemRouter);
-app.use('/api', batchSemCoursesRouter);
+app.use("/api", batchSemCoursesRouter);
 app.use("/api/course-offerings", courseOfferingRoutes);
 app.use("/api/assignments", teachingAssignmentRoutes);
 app.use("/api/course-cover-page", courseCoverRoutes);
 app.use('/api/vision-mission', visionMissionRoutes);
 app.use('/api/peos', peoRoutes);
-app.use('/api/timetable', timetableRoutes); // ✅ timetable routes mounted
-const curriculumGapRoutes = require('./routes/curriculumGapRoutes');
+app.use('/api/timetable', timetableRoutes);
 app.use('/api', curriculumGapRoutes);
-const courseOutcomeRoutes = require('./routes/courseOutcomeRoutes');
 app.use('/api/course-outcome', courseOutcomeRoutes);
+
+// ✅ PO routes
+app.use('/api/po', poRoutes);
 
 // Start server
 app.listen(PORT, () => {
