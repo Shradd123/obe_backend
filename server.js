@@ -60,6 +60,8 @@ app.use('/api/course-outcome', courseOutcomeRoutes);
 
 // ✅ PO routes
 app.use('/api/po', poRoutes);
+const tsoRoutes = require("./routes/tsoRoutes");
+app.use("/api/tso", tsoRoutes);
 
 // Start server
 app.listen(PORT, () => {
