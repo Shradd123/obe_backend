@@ -36,6 +36,8 @@ const semRouter = require('./routes/semRouter');
 const batchSemRouter = require('./routes/batchSemRouter');
 const batchSemCoursesRouter = require('./routes/batchSemCoursesRouter');
 const courseOfferingRoutes = require("./routes/courseOfferingRoutes");
+app.use('/', deptRoutes);
+app.use('/api', require('./routes/deptRoutes'));
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/departments', deptRoutes);
