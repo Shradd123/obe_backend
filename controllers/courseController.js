@@ -45,6 +45,10 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+
+const { dbPool } = require('../config/db');
+
+
 // Get all course types
 const getCourseTypes = async (req, res) => {
   try {
