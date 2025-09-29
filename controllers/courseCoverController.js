@@ -115,25 +115,35 @@ const getCourseCoverFallback = async (req, res) => {
     const [rows] = await dbPool.query(
       `
       SELECT 
-        c.course_id,
-        c.name AS courseName,
-        c.code AS courseCode,
-        c.nba AS nbaCode,
-        CONCAT('Sem ', s.sem, ' - ', sec.name) AS semesterSection,
-        CONCAT(b.start_year, '-', b.end_year) AS academicYear,
-        MAX(CASE WHEN cta.role = 'instructor' THEN f.name END) AS facultyIncharge,
-        MAX(CASE WHEN cta.role = 'coordinator' THEN f.name END) AS courseCoordinator,
-        MAX(f.faculty_id) AS facultyId
-      FROM course c
-      LEFT JOIN course_offering co ON co.course_id = c.course_id
-      LEFT JOIN sem s ON s.sem_id = co.sem_id
-      LEFT JOIN batch b ON b.batch_id = co.batch_id
-      LEFT JOIN course_teaching_assignment cta ON cta.offering_id = co.offering_id
-      LEFT JOIN faculty f ON f.faculty_id = cta.faculty_id
-      LEFT JOIN section sec ON sec.section_id = cta.section_id
-      WHERE c.course_id = ?
-      GROUP BY c.course_id, c.name, c.code, c.nba, s.sem, sec.name, b.start_year, b.end_year
-      LIMIT 1
+    c.course_id,
+    c.name AS courseName,
+    c.code AS courseCode,
+    c.nba AS nbaCode,
+    CONCAT('Sem ', s.sem, ' - ', sec.name) AS semesterSection,
+    CONCAT(b.start_year, '-', b.end_year) AS academicYear,
+    MAX(CASE WHEN cta.role = 'instructor' THEN f.name END) AS facultyIncharge,
+    MAX(CASE WHEN cta.role = 'coordinator' THEN f.name END) AS courseCoordinator,
+    MAX(f.faculty_id) AS facultyId
+FROM course_offering co
+JOIN course c ON c.course_id = co.course_id
+LEFT JOIN sem s ON s.sem_id = co.sem_id
+LEFT JOIN batch b ON b.batch_id = co.batch_id
+LEFT JOIN course_teaching_assignment cta ON cta.offering_id = co.offering_id
+LEFT JOIN faculty f ON f.faculty_id = cta.faculty_id
+LEFT JOIN section sec ON sec.section_id = cta.section_id
+WHERE co.offering_id = ?
+GROUP BY 
+    co.offering_id,  
+    c.course_id, 
+    c.name, 
+    c.code, 
+    c.nba, 
+    s.sem, 
+    sec.name, 
+    b.start_year, 
+    b.end_year
+LIMIT 1
+
       `,
       [courseId]
     );

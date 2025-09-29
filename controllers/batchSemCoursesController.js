@@ -5,9 +5,9 @@ const getCoursesByBatchSem = async (req, res) => {
   const { batchId, semId } = req.params;
 
   try {
-    // 1. Verify batch exists & get schema_id
+    // 1. Verify batch exists
     const [batchRows] = await dbPool.query(
-      "SELECT schema_id FROM batch WHERE batch_id = ?",
+      "SELECT batch_id FROM batch WHERE batch_id = ?",
       [batchId]
     );
 
@@ -15,23 +15,21 @@ const getCoursesByBatchSem = async (req, res) => {
       return res.status(404).json({ error: "Batch not found" });
     }
 
-    const schemaId = batchRows[0].schema_id;
-    if (!schemaId) {
-      return res.json([]); // if schema not assigned, return empty
-    }
-
-    // 2. Get courses for this schema + semester with course type
+    // 2. Get courses for this batch + semester with course type
     const [courses] = await dbPool.query(
       `SELECT 
-          c.course_id, 
+          co.offering_id,         
           c.code, 
           c.name, 
           ct.name AS courseType
-       FROM schema_course sc
-       JOIN course c ON sc.course_id = c.course_id
-       LEFT JOIN course_type ct ON c.course_type_id = ct.course_type_id
-       WHERE sc.schema_id = ? AND sc.sem = ?`,
-      [schemaId, semId]
+       FROM course_offering co
+       JOIN course c 
+            ON co.course_id = c.course_id
+       LEFT JOIN course_type ct 
+            ON c.course_type_id = ct.course_type_id
+       WHERE co.batch_id = ?   
+         AND co.sem_id = ?;`,
+      [batchId, semId]   // ✅ fixed
     );
 
     res.json(courses);
