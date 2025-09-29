@@ -64,6 +64,9 @@ app.use('/api/course-outcome', courseOutcomeRoutes);
 app.use('/api/po', poRoutes);
 const tsoRoutes = require("./routes/tsoRoutes");
 app.use("/api/tso", tsoRoutes);
+// CO–PO–PSO Mapping routes
+const coPoPsoMappingRoutes = require("./routes/coPoPsoMappingRoutes");
+app.use("/api/co-po-pso-mapping", coPoPsoMappingRoutes);
 
 // Start server
 app.listen(PORT, () => {
