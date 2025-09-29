@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const coPoPsoController = require('../controllers/coPoPsoController');
+const coPoPsoController = require('../controllers/coPoPsoMappingController');
 
 // Get COs for a course
 router.get('/course-outcome/:courseId', coPoPsoController.getCourseOutcomes);
