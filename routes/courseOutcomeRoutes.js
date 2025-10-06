@@ -3,10 +3,10 @@ const router = express.Router();
 const courseOutcomeController = require('../controllers/courseOutcomeController');
 
 // Get all COs for a course
-router.get('/:course_id', courseOutcomeController.getAll);
+router.get('/:offering_id', courseOutcomeController.getAll);
 
 // Add a new CO
-router.post('/:course_id', courseOutcomeController.create);
+router.post('/:offering_id', courseOutcomeController.create);
 
 // Update a CO
 router.put('/:co_id', courseOutcomeController.update);

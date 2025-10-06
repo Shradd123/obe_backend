@@ -62,42 +62,37 @@
 // };
 
 // module.exports = { getPEOs };
+
+
+
+
 const { dbPool } = require('../config/db');
 
-// Get PEOs for a course (mapped via department)
+// Get PEOs for a course offering (via department)
 const getPEOs = async (req, res) => {
   try {
-    const { course_id } = req.params;
-    if (!course_id) {
-      return res.status(400).json({ message: 'Course ID or code is required' });
+    const { offering_id } = req.params; // ✅ now using offering_id
+    if (!offering_id) {
+      return res.status(400).json({ message: 'Offering ID is required' });
     }
 
-    // Determine if course_id is numeric or a course code
-    const isNumeric = !isNaN(course_id);
-    const courseQuery = isNumeric
-      ? `
-        SELECT pr.dept_id
-        FROM course c
-        JOIN schema_course sc ON sc.course_id = c.course_id
-        JOIN schema_table st ON st.schema_id = sc.schema_id
-        JOIN program pr ON pr.program_id = st.program_id
-        WHERE c.course_id = ?
-        LIMIT 1
+    // Fetch dept_id via course_offering → course → schema_course → schema_table → program → dept
+    const [courseRows] = await dbPool.query(
       `
-      : `
-        SELECT pr.dept_id
-        FROM course c
-        JOIN schema_course sc ON sc.course_id = c.course_id
-        JOIN schema_table st ON st.schema_id = sc.schema_id
-        JOIN program pr ON pr.program_id = st.program_id
-        WHERE c.code = ?
-        LIMIT 1
-      `;
-
-    const [courseRows] = await dbPool.query(courseQuery, [course_id]);
+      SELECT pr.dept_id
+      FROM course_offering co
+      JOIN course c ON c.course_id = co.course_id
+      JOIN schema_course sc ON sc.course_id = c.course_id
+      JOIN schema_table st ON st.schema_id = sc.schema_id
+      JOIN program pr ON pr.program_id = st.program_id
+      WHERE co.offering_id = ?
+      LIMIT 1
+      `,
+      [offering_id]
+    );
 
     if (!courseRows.length) {
-      return res.status(404).json({ message: 'Course not found or not linked to a program' });
+      return res.status(404).json({ message: 'Offering not found or not linked to a program' });
     }
 
     const deptId = courseRows[0].dept_id;
@@ -110,8 +105,8 @@ const getPEOs = async (req, res) => {
 
     const peos = peoRows.length
       ? peoRows.map((row, index) => ({
-          number: index + 1,      // Optional: add numbering (PEO 1, PEO 2…)
-          title: row.title,        // Display title instead of id
+          number: index + 1,      // Optional numbering (PEO 1, 2…)
+          title: row.title,
           description: row.description
         }))
       : [];

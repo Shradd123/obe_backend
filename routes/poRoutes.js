@@ -3,7 +3,7 @@ const router = express.Router();
 const poController = require("../controllers/poController");
 
 // ✅ Fetch POs and PSOs by courseId
-router.get("/course/:courseId", poController.getPOsByCourse);
+router.get("/course/:offering_id", poController.getPOsByCourse);
 
 // ✅ CRUD for PO
 router.post("/", poController.createPO);

@@ -1,20 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { getCourseCover, upsertCourseCover, getCourseCoverFallback } = require("../controllers/courseCoverController");
+const {
+  getCourseCover,
+  upsertCourseCover,
+  getCourseCoverFallback,
+} = require("../controllers/courseCoverController");
 
-// ============================
-// GET course cover by faculty + course
-// ============================
-router.get("/:facultyId/:courseId", getCourseCover);
+// GET by faculty + offering
+router.get("/:facultyId/:offeringId", getCourseCover);
 
-// ============================
-// UPSERT course cover
-// ============================
-router.post("/:facultyId/:courseId", upsertCourseCover);
+// UPSERT by faculty + offering
+router.post("/:facultyId/:offeringId", upsertCourseCover);
 
-// ============================
-// FALLBACK: courseId only (dynamic from DB)
-// ============================
-router.get("/fallback/:courseId", getCourseCoverFallback);
+// FALLBACK: offering only
+router.get("/fallback/:offeringId", getCourseCoverFallback);
 
 module.exports = router;
