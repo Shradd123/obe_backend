@@ -3,12 +3,10 @@ const express = require('express');
 const router = express.Router();
 const curriculumGapController = require('../controllers/curriculumGapController');
 
-// Save (Insert/Update)
+// Save (Insert/Update) using offeringId
 router.post('/curriculum-gap/save', curriculumGapController.saveCurriculumGapAnalysis);
 
-// Fetch by course_id
-router.get('/curriculum-gap/:course_id', curriculumGapController.getCurriculumGapAnalysis);
+// Fetch by offeringId
+router.get('/curriculum-gap/:offeringId', curriculumGapController.getCurriculumGapAnalysis);
 
 module.exports = router;
-
-

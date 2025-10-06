@@ -65,9 +65,10 @@ app.use('/api/po', poRoutes);
 const tsoRoutes = require("./routes/tsoRoutes");
 app.use("/api/tso", tsoRoutes);
 // CO–PO–PSO Mapping routes
-const coPoPsoMappingRoutes = require("./routes/coPoPsoMappingRoutes");
-app.use("/api/co-po-pso-mapping", coPoPsoMappingRoutes);
-
+// const coPoPsoMappingRoutes = require("./routes/coPoPsoMappingRoutes");
+// app.use("/api/co-po-pso-mapping", coPoPsoMappingRoutes);
+const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
+app.use('/api/lesson-plan', lessonPlanRoutes);
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);

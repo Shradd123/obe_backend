@@ -1,17 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const tsoController = require("../controllers/tsoController");
+const {
+  getCourseData,
+  saveCourseInfo,
+  addModule,
+} = require("../controllers/tsoController");
 
-// ✅ Get all TSO-related data for a course
-// Example: GET /api/tso/123
-router.get("/:courseId", tsoController.getCourseData);
+// ✅ Get course + TSO data
+router.get("/:offering_id", getCourseData);
 
-// ✅ Save or update course info (manual save)
-// Example: POST /api/tso/save-course-info
-router.post("/save-course-info", tsoController.saveCourseInfo);
+// ✅ Save or update TSO course info
+router.post("/save", saveCourseInfo);
 
-// ✅ Add module with nested contents + tso details
-// Example: POST /api/tso/add-module
-router.post("/add-module", tsoController.addModule);
+// ✅ Add new module + nested details
+router.post("/add-module", addModule);
 
 module.exports = router;
