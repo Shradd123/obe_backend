@@ -80,6 +80,8 @@ app.use('/api/student-list', studentListRoutes);
 app.use('/api/lab-timetable', labTimetableRoutes);
 const labCourseCoverPageRoutes = require('./routes/labCourseCoverPageRoutes');
 app.use('/api/lab-course-cover-page', labCourseCoverPageRoutes);
+const labSyllabusRoutes = require('./routes/labSyllabusRoutes');
+app.use('/api/lab-syllabus', labSyllabusRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
