@@ -23,6 +23,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
+const studentListRoutes = require('./routes/studentListRoutes');
+
 const adminRoutes = require('./routes/adminRoutes');
 const deptRoutes = require('./routes/deptRoutes');
 const programRoutes = require('./routes/programRoutes');
@@ -56,7 +58,8 @@ app.use("/api/assignments", teachingAssignmentRoutes);
 app.use("/api/course-cover-page", courseCoverRoutes);
 app.use('/api/vision-mission', visionMissionRoutes);
 app.use('/api/peos', peoRoutes);
-app.use('/api/timetable', timetableRoutes); // ✅ timetable routes mounted
+app.use('/api/timetable', timetableRoutes); 
+const labTimetableRoutes = require('./routes/labTimetableRoutes');// ✅ timetable routes mounted
 app.use('/api', curriculumGapRoutes);
 app.use('/api/course-outcome', courseOutcomeRoutes);
 
@@ -70,6 +73,14 @@ app.use("/api/tso", tsoRoutes);
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 app.use('/api/lesson-plan', lessonPlanRoutes);
 // Start server
+
+app.use('/api/student-list', studentListRoutes);
+
+// 🧩 Mount routes
+app.use('/api/lab-timetable', labTimetableRoutes);
+const labCourseCoverPageRoutes = require('./routes/labCourseCoverPageRoutes');
+app.use('/api/lab-course-cover-page', labCourseCoverPageRoutes);
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
