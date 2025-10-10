@@ -82,7 +82,8 @@ const labCourseCoverPageRoutes = require('./routes/labCourseCoverPageRoutes');
 app.use('/api/lab-course-cover-page', labCourseCoverPageRoutes);
 const labSyllabusRoutes = require('./routes/labSyllabusRoutes');
 app.use('/api/lab-syllabus', labSyllabusRoutes);
-
+const labReferenceRoutes = require('./routes/labReferenceRoutes');
+app.use('/api/lab-references', labReferenceRoutes);
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
