@@ -4,8 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const {
   uploadLabTimetable,
-  getLabTimetablesByCourse,
-  deleteLabTimetable
+  getLabTimetablesByOffering,
+  deleteLabTimetable,
 } = require('../controllers/labTimetableController');
 
 // 📁 Multer Configuration
@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+  },
 });
 
 const upload = multer({ storage });
@@ -24,8 +24,8 @@ const upload = multer({ storage });
 // 📥 Upload File
 router.post('/upload', upload.single('lab_timetable'), uploadLabTimetable);
 
-// 📤 Get All Files by Course
-router.get('/course/:courseId', getLabTimetablesByCourse);
+// 📤 Get All Files by Offering
+router.get('/offering/:offeringId', getLabTimetablesByOffering);
 
 // 🗑️ Delete File
 router.delete('/:id', deleteLabTimetable);
