@@ -20,15 +20,19 @@ const getCoursesByBatchSem = async (req, res) => {
       `SELECT 
           co.offering_id,         
           c.code, 
-          c.name, 
+          c.name,
+          a.role,
           ct.name AS courseType
        FROM course_offering co
+       JOIN course_teaching_assignment a 
+    ON co.offering_id = a.offering_id
        JOIN course c 
             ON co.course_id = c.course_id
        LEFT JOIN course_type ct 
             ON c.course_type_id = ct.course_type_id
        WHERE co.batch_id = ?   
-         AND co.sem_id = ?;`,
+         AND co.sem_id = ?;
+`,
       [batchId, semId]   // ✅ fixed
     );
 
