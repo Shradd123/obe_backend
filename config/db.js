@@ -8,7 +8,7 @@ const util = require('util');
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'Shraddha@27', // change as needed
+  password: 'password', // change as needed
   database: 'obe',
 });
 db.connect((err) => {
@@ -23,7 +23,7 @@ db.connect((err) => {
 const dbPool = mysql2.createPool({
   host: 'localhost',
   user: 'root',
-  password: 'Shraddha@27', // change as needed
+  password: 'password', // change as needed
   database: 'obe',
   waitForConnections: true,
   connectionLimit: 10,
