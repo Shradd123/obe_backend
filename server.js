@@ -68,10 +68,15 @@ app.use('/api/po', poRoutes);
 const tsoRoutes = require("./routes/tsoRoutes");
 app.use("/api/tso", tsoRoutes);
 // CO–PO–PSO Mapping routes
-// const coPoPsoMappingRoutes = require("./routes/coPoPsoMappingRoutes");
-// app.use("/api/co-po-pso-mapping", coPoPsoMappingRoutes);
+const coPoPsoMappingRoutes = require("./routes/coPoPsoMappingRoutes");
+app.use("/api/co-po-pso-mapping", coPoPsoMappingRoutes);
 const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 app.use('/api/lesson-plan', lessonPlanRoutes);
+
+//pso routes
+
+const psoRoutes = require('./routes/psoRoutes');
+app.use('/api/pso', psoRoutes);
 // Start server
 
 app.use('/api/student-list', studentListRoutes);
