@@ -92,6 +92,9 @@ const labBeyondSyllabusRoutes = require("./routes/labBeyondSyllabusRoutes");
 app.use("/api/lab", labBeyondSyllabusRoutes);
 const labCoPoRoutes = require('./routes/labCoPoRoutes');
 app.use('/api', labCoPoRoutes);
+
+const labPlanExecutionRoutes = require("./routes/labPlanExecutionRoutes");
+app.use("/api/lab-plan-execution", labPlanExecutionRoutes);
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
