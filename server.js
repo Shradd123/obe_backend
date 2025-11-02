@@ -97,7 +97,8 @@ const labBeyondSyllabusRoutes = require("./routes/labBeyondSyllabusRoutes");
 app.use("/api/lab", labBeyondSyllabusRoutes);
 const labCoPoRoutes = require('./routes/labCoPoRoutes');
 app.use('/api', labCoPoRoutes);
-
+// const labLessonPlanRoutes = require("./routes/labLessonPlanRoutes");
+// app.use("/api/lab/lesson-plan", labLessonPlanRoutes);
 const labPlanExecutionRoutes = require("./routes/labPlanExecutionRoutes");
 app.use("/api/lab-plan-execution", labPlanExecutionRoutes);
 app.listen(PORT, () => {
