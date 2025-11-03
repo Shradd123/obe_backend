@@ -61,7 +61,8 @@ app.use('/api/peos', peoRoutes);
 app.use('/api/timetable', timetableRoutes); 
 const labTimetableRoutes = require('./routes/labTimetableRoutes');// ✅ timetable routes mounted
 app.use('/api', curriculumGapRoutes);
-app.use('/api/course-outcome', courseOutcomeRoutes);
+app.use('/faculty/course-outcomes', courseOutcomeRoutes);
+
 
 // ✅ PO routes
 app.use('/api/po', poRoutes);
