@@ -63,6 +63,10 @@ const labTimetableRoutes = require('./routes/labTimetableRoutes');// ✅ timetab
 app.use('/api', curriculumGapRoutes);
 app.use('/faculty/course-outcomes', courseOutcomeRoutes);
 
+const textbookRoutes = require("./routes/textbookReferencesRoutes");
+app.use("/api/textbook-references", textbookRoutes);
+
+
 
 // ✅ PO routes
 app.use('/api/po', poRoutes);
