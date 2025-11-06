@@ -134,110 +134,255 @@
 // };
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const { dbPool } = require("../config/db");
+
+// // =======================
+// // SAVE OR UPDATE THEORY TABLE
+// // =======================
+// const saveTheorySessionOutcomes = async (req, res) => {
+//   try {
+//     const { offering_id } = req.params;
+//     const { rows } = req.body; // array of table rows
+
+//     if (!offering_id) return res.status(400).json({ message: "Offering ID is required" });
+
+//     // Delete old entries to replace cleanly
+//     await dbPool.query("DELETE FROM theory_session_outcomes WHERE offering_id = ?", [offering_id]);
+
+//     // Insert new rows
+//     for (const row of rows) {
+//       await dbPool.query(
+//         `INSERT INTO theory_session_outcomes (offering_id, class_no, module, contents, tso, outcomes, co_cl)
+//          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+//         [
+//           offering_id,
+//           row.classNo || null,
+//           row.module || null,
+//           row.contents || null,
+//           row.tso || null,
+//           row.outcomes || null,
+//           row.coCl || null,
+//         ]
+//       );
+//     }
+
+//     return res.json({ message: "Theory Session Outcomes Saved Successfully" });
+//   } catch (err) {
+//     console.error("Error saving theory outcomes:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+// // =======================
+// // SAVE OR UPDATE LESSON PLAN
+// // =======================
+// const saveLessonPlan = async (req, res) => {
+//   try {
+//     const { offering_id } = req.params;
+//     const { lessons } = req.body; // array of lesson rows
+
+//     if (!offering_id) return res.status(400).json({ message: "Offering ID is required" });
+
+//     // Clear previous records
+//     await dbPool.query("DELETE FROM lesson_plan WHERE offering_id = ?", [offering_id]);
+
+//     // Insert new lesson plan rows
+//     for (const lesson of lessons) {
+//       await dbPool.query(
+//         `INSERT INTO lesson_plan (offering_id, module_no, topic, date_of_plan, executed_date, remarks)
+//          VALUES (?, ?, ?, ?, ?, ?)`,
+//         [
+//           offering_id,
+//           lesson.moduleNo || null,
+//           lesson.topic || null,
+//           lesson.dateOfPlan || null,
+//           lesson.executedDate || null,
+//           lesson.remarks || null,
+//         ]
+//       );
+//     }
+
+//     return res.json({ message: "Lesson Plan Saved Successfully" });
+//   } catch (err) {
+//     console.error("Error saving lesson plan:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+// // =======================
+// // FETCH BOTH TABLES
+// // =======================
+// const getLessonPlanData = async (req, res) => {
+//   try {
+//     const { offering_id } = req.params;
+
+//     const [theoryRows] = await dbPool.query(
+//       "SELECT * FROM theory_session_outcomes WHERE offering_id = ?",
+//       [offering_id]
+//     );
+
+//     const [lessonRows] = await dbPool.query(
+//       "SELECT * FROM lesson_plan WHERE offering_id = ?",
+//       [offering_id]
+//     );
+
+//     return res.json({
+//       theory: theoryRows,
+//       lessonPlan: lessonRows,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching lesson plan data:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+// module.exports = {
+//   saveTheorySessionOutcomes,
+//   saveLessonPlan,
+//   getLessonPlanData
+// };
+
+
+
+
+
 const { dbPool } = require("../config/db");
 
-// =======================
-// SAVE OR UPDATE THEORY TABLE
-// =======================
-const saveTheorySessionOutcomes = async (req, res) => {
+// ======================= GET Lesson Plan Data =======================
+const getLessonPlanData = async (req, res) => {
+  const { offering_id } = req.params;
+
   try {
-    const { offering_id } = req.params;
-    const { rows } = req.body; // array of table rows
+    const [theory] = await dbPool.query(
+      `SELECT * FROM theory_session_outcomes WHERE offering_id = ? ORDER BY id ASC`,
+      [offering_id]
+    );
 
-    if (!offering_id) return res.status(400).json({ message: "Offering ID is required" });
+    const [lessonPlan] = await dbPool.query(
+      `SELECT * FROM lesson_plan WHERE offering_id = ? ORDER BY id ASC`,
+      [offering_id]
+    );
 
-    // Delete old entries to replace cleanly
-    await dbPool.query("DELETE FROM theory_session_outcomes WHERE offering_id = ?", [offering_id]);
-
-    // Insert new rows
-    for (const row of rows) {
-      await dbPool.query(
-        `INSERT INTO theory_session_outcomes (offering_id, class_no, module, contents, tso, outcomes, co_cl)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          offering_id,
-          row.classNo || null,
-          row.module || null,
-          row.contents || null,
-          row.tso || null,
-          row.outcomes || null,
-          row.coCl || null,
-        ]
-      );
-    }
-
-    return res.json({ message: "Theory Session Outcomes Saved Successfully" });
+    res.json({ theory, lessonPlan });
   } catch (err) {
-    console.error("Error saving theory outcomes:", err);
-    return res.status(500).json({ message: "Server error" });
+    console.error("❌ Error fetching lesson plan:", err);
+    res.status(500).json({ message: "Error fetching lesson plan data" });
   }
 };
 
-// =======================
-// SAVE OR UPDATE LESSON PLAN
-// =======================
-const saveLessonPlan = async (req, res) => {
+// ======================= SAVE Theory Session Outcomes =======================
+const saveTheorySessionOutcomes = async (req, res) => {
+  const connection = await dbPool.getConnection();
+  const { offering_id } = req.params;
+  const { rows } = req.body;
+
+  if (!offering_id || !Array.isArray(rows)) {
+    return res.status(400).json({ message: "Invalid data" });
+  }
+
   try {
-    const { offering_id } = req.params;
-    const { lessons } = req.body; // array of lesson rows
+    await connection.beginTransaction();
 
-    if (!offering_id) return res.status(400).json({ message: "Offering ID is required" });
+    // Delete old data for this offering (to avoid duplicates)
+    await connection.query(
+      `DELETE FROM theory_session_outcomes WHERE offering_id = ?`,
+      [offering_id]
+    );
 
-    // Clear previous records
-    await dbPool.query("DELETE FROM lesson_plan WHERE offering_id = ?", [offering_id]);
+    // Insert new data
+    for (const row of rows) {
+      for (const detail of row.details) {
+        for (const content of detail.contents) {
+          for (const tso of content.tsoRows) {
+            await connection.query(
+              `INSERT INTO theory_session_outcomes 
+               (offering_id, class_no, module, contents, tso, outcomes, co_cl)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                offering_id,
+                row.classNo,
+                detail.module,
+                content.contentTitle,
+                tso.tso,
+                tso.outcomes,
+                tso.coCl,
+              ]
+            );
+          }
+        }
+      }
+    }
 
-    // Insert new lesson plan rows
-    for (const lesson of lessons) {
-      await dbPool.query(
-        `INSERT INTO lesson_plan (offering_id, module_no, topic, date_of_plan, executed_date, remarks)
+    await connection.commit();
+    res.json({ message: "✅ Theory session outcomes saved successfully" });
+  } catch (err) {
+    await connection.rollback();
+    console.error("❌ Error saving theory session outcomes:", err);
+    res.status(500).json({ message: "Error saving theory session outcomes" });
+  } finally {
+    connection.release();
+  }
+};
+
+// ======================= SAVE Lesson Plan =======================
+const saveLessonPlan = async (req, res) => {
+  const connection = await dbPool.getConnection();
+  const { offering_id } = req.params;
+  const { lessons } = req.body;
+
+  if (!offering_id || !Array.isArray(lessons)) {
+    return res.status(400).json({ message: "Invalid data" });
+  }
+
+  try {
+    await connection.beginTransaction();
+    await connection.query(
+      `DELETE FROM lesson_plan WHERE offering_id = ?`,
+      [offering_id]
+    );
+
+    for (const l of lessons) {
+      await connection.query(
+        `INSERT INTO lesson_plan 
+         (offering_id, module_no, topic, date_of_plan, executed_date, remarks)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
           offering_id,
-          lesson.moduleNo || null,
-          lesson.topic || null,
-          lesson.dateOfPlan || null,
-          lesson.executedDate || null,
-          lesson.remarks || null,
+          l.moduleNo,
+          l.topic,
+          l.dateOfPlan || null,
+          l.executedDate || null,
+          l.remarks,
         ]
       );
     }
 
-    return res.json({ message: "Lesson Plan Saved Successfully" });
+    await connection.commit();
+    res.json({ message: "✅ Lesson plan saved successfully" });
   } catch (err) {
-    console.error("Error saving lesson plan:", err);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
-// =======================
-// FETCH BOTH TABLES
-// =======================
-const getLessonPlanData = async (req, res) => {
-  try {
-    const { offering_id } = req.params;
-
-    const [theoryRows] = await dbPool.query(
-      "SELECT * FROM theory_session_outcomes WHERE offering_id = ?",
-      [offering_id]
-    );
-
-    const [lessonRows] = await dbPool.query(
-      "SELECT * FROM lesson_plan WHERE offering_id = ?",
-      [offering_id]
-    );
-
-    return res.json({
-      theory: theoryRows,
-      lessonPlan: lessonRows,
-    });
-  } catch (err) {
-    console.error("Error fetching lesson plan data:", err);
-    return res.status(500).json({ message: "Server error" });
+    await connection.rollback();
+    console.error("❌ Error saving lesson plan:", err);
+    res.status(500).json({ message: "Error saving lesson plan" });
+  } finally {
+    connection.release();
   }
 };
 
 module.exports = {
+  getLessonPlanData,
   saveTheorySessionOutcomes,
   saveLessonPlan,
-  getLessonPlanData
 };
