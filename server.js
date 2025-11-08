@@ -66,8 +66,15 @@ app.use('/faculty/course-outcomes', courseOutcomeRoutes);
 const textbookRoutes = require("./routes/textbookReferencesRoutes");
 app.use("/api/textbook-references", textbookRoutes);
 
-const journalRoutes = require("./routes/journalRoutes");
-app.use("/api/journals", journalRoutes);
+const questionPaperRoutes = require('./routes/questionPaperRoutes');
+
+
+
+// Routes
+app.use('/api/question-paper', questionPaperRoutes);
+
+// const journalRoutes = require("./routes/journalRoutes");
+// app.use("/api/journals", journalRoutes);
 
 // ✅ PO routes
 app.use('/api/po', poRoutes);
