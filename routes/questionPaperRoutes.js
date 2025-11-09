@@ -16,6 +16,11 @@ router.post('/create', createQuestionPaper);
 router.get('/:type/:subject_id', getQuestionPaperByTypeAndSubject);
 router.put('/update/:paper_id', updateQuestionPaper);
 router.get('/full/:subject_id/:type', getFullQuestionPaperBySubjectAndType);
+const { getFullQuestionPaper } = require('../controllers/questionPaperController');
+
+// Example route:
+
+router.get('/full/:subject/:type/:set_name/:pattern', getFullQuestionPaper);
 
 
 
