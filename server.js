@@ -69,7 +69,11 @@ app.use("/api/textbook-references", textbookRoutes);
 
 const questionPaperRoutes = require('./routes/questionPaperRoutes');
 
+const marksRoutes = require("./routes/marksRoutes");
 
+
+// routes
+app.use("/api/marks", marksRoutes);
 
 // Routes
 app.use('/api/question-paper', questionPaperRoutes);

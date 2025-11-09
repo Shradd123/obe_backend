@@ -443,3 +443,128 @@ exports.getFullQuestionPaper = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+
+
+
+
+
+// WARNING: Assuming this is the code for the marks entry API endpoint
+exports.getQuestionPaperByParams = async (req, res) => {
+    try {
+        // Renamed subject_id to subject for consistency with current frontend naming, 
+        // but keep the parameter name as subject_id for clarity.
+        const { subject_id, type, set_name } = req.params; 
+
+        const [rows] = await dbPool.query(
+            `
+            SELECT 
+                qpc.id AS paper_id,
+                qpc.type,
+                qpc.subject_id,
+                qpc.set_name,
+                qpc.pattern,
+                qpc.title,
+                qpc.code,
+                qpc.exam_date,
+                qpc.time_from,
+                qpc.time_to,
+                qpc.dept,
+                qpc.faculty,
+                qpc.sem,
+                qpc.section,
+                qpc.marks AS total_marks_config,
+                qpc.scheme,
+                qp.id AS part_id,
+                qp.module AS Module, -- Use 'Module' for frontend consistency
+                q.id AS question_id,
+                q.qno,
+                sq.id AS subquestion_id,
+                sq.label,
+                sq.text,
+                sq.marks AS sub_marks, -- Renamed to sub_marks
+                sq.co,
+                sq.blooms,
+                sq.diagram,
+                sq.diagram_path
+            FROM question_paper_config qpc
+            JOIN question_parts qp ON qpc.id = qp.paper_id
+            JOIN questions q ON qp.id = q.part_id
+            JOIN subquestions sq ON q.id = sq.question_id
+            WHERE qpc.subject_id = ? 
+              AND qpc.type = ?
+              AND qpc.set_name = ?
+            ORDER BY qp.module, q.qno, sq.label;
+            `,
+            [subject_id, type, set_name]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'No question paper found for given parameters.' });
+        }
+
+        // --- Data Grouping and Transformation (Same logic as before, for consistency) ---
+        const paperConfig = rows[0];
+        const partsMap = new Map();
+
+        rows.forEach((row) => {
+            if (!partsMap.has(row.part_id)) {
+                partsMap.set(row.part_id, {
+                    Module: row.Module,
+                    questionsMap: new Map(),
+                    totalMarks: 0,
+                });
+            }
+
+            const currentPart = partsMap.get(row.part_id);
+
+            if (!currentPart.questionsMap.has(row.question_id)) {
+                currentPart.questionsMap.set(row.question_id, {
+                    qno: row.qno,
+                    subquestions: [],
+                });
+            }
+
+            const currentQuestion = currentPart.questionsMap.get(row.question_id);
+            const subMarks = parseInt(row.sub_marks) || 0;
+            
+            currentQuestion.subquestions.push({
+                label: row.label,
+                text: row.text,
+                marks: subMarks,
+                co: row.co,
+            });
+
+            currentPart.totalMarks += subMarks;
+        });
+
+        const parts = Array.from(partsMap.values()).map(part => ({
+            Module: part.Module,
+            totalMarks: part.totalMarks.toString(),
+            questions: Array.from(part.questionsMap.values()).map(question => ({
+                qno: question.qno,
+                subquestions: question.subquestions,
+            })),
+        }));
+
+
+        res.json({
+            success: true,
+            paper: { // Frontend expects a 'paper' object for config details
+                id: paperConfig.paper_id,
+                subject_id: paperConfig.subject_id,
+                type: paperConfig.type,
+                set_name: paperConfig.set_name,
+                pattern: paperConfig.pattern,
+                title: paperConfig.title,
+                code: paperConfig.code,
+                // Include other config details here
+            },
+            parts: parts, // Frontend expects 'parts' array for questions
+        });
+
+    } catch (error) {
+        console.error('❌ Error fetching question paper:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+};
