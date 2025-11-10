@@ -50,6 +50,7 @@ app.use('/api/schemas', schemaRoutes);
 app.use('/api/batch', batchRoutes);
 app.use('/api/section', sectionRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/students', studentRoutes);
 app.use('/sem', semRouter);
 app.use('/batch-sem', batchSemRouter);
 app.use('/api', batchSemCoursesRouter);
@@ -68,7 +69,11 @@ app.use("/api/textbook-references", textbookRoutes);
 
 const questionPaperRoutes = require('./routes/questionPaperRoutes');
 
+const marksRoutes = require("./routes/marksRoutes");
 
+
+// routes
+app.use("/api/marks", marksRoutes);
 
 // Routes
 app.use('/api/question-paper', questionPaperRoutes);

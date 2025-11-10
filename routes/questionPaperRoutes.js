@@ -9,6 +9,12 @@ const {
   getFullQuestionPaperBySubjectAndType,
 } = require('../controllers/questionPaperController');
 
+const { getQuestionPaperByParams } = require('../controllers/questionPaperController');
+
+// Route example:
+// http://localhost:5001/api/question-paper/full/10/cie1/B
+router.get('/full/:subject_id/:type/:set_name', getQuestionPaperByParams);
+
 
 
 // Existing ones
@@ -16,6 +22,11 @@ router.post('/create', createQuestionPaper);
 router.get('/:type/:subject_id', getQuestionPaperByTypeAndSubject);
 router.put('/update/:paper_id', updateQuestionPaper);
 router.get('/full/:subject_id/:type', getFullQuestionPaperBySubjectAndType);
+const { getFullQuestionPaper } = require('../controllers/questionPaperController');
+
+// Example route:
+
+router.get('/full/:subject/:type/:set_name/:pattern', getFullQuestionPaper);
 
 
 

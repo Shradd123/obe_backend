@@ -226,64 +226,7 @@ exports.updateQuestionPaper = async (req, res) => {
 
 // ---------------------- DISPLAY QUESTION PAPER DETAILS ----------------------
 
-exports.displayQuestionPaperDetails = async (req, res) => {
-  try {
-    const { type, subject_id } = req.params;
-
-    console.log("Fetching for type:", type, "subject_id:", subject_id);
-
-    const [paperResult] = await dbPool.query(
-      `SELECT qpc.*, s.name AS subject_name
-       FROM question_paper_config qpc
-       JOIN subjects s ON qpc.subject_id = s.id
-       WHERE LOWER(qpc.type) = LOWER(?) AND qpc.subject_id = ?`,
-      [type, subject_id]
-    );
-
-    if (paperResult.length === 0) {
-      return res.status(404).json({ success: false, message: 'No records found' });
-    }
-
-    const paper = paperResult[0];
-
-    // Fetch question structure
-    const [parts] = await dbPool.query(
-      `SELECT id, Module FROM question_parts WHERE paper_id = ?`,
-      [paper.id]
-    );
-
-    for (const part of parts) {
-      const [questions] = await dbPool.query(
-        `SELECT id, qno FROM questions WHERE part_id = ?`,
-        [part.id]
-      );
-
-      for (const question of questions) {
-        const [subquestions] = await dbPool.query(
-          `SELECT label, text, marks, co FROM subquestions WHERE question_id = ?`,
-          [question.id]
-        );
-        question.subquestions = subquestions;
-      }
-
-      part.questions = questions;
-    }
-
-    res.json({
-      success: true,
-      subject: paper.subject_name,
-      type: paper.type,
-      set_name: paper.set_name,
-      pattern: paper.pattern,
-      parts,
-    });
-
-  } catch (error) {
-    console.error("Error in displayQuestionPaperDetails:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
+// 
 
 
 // GET paper + modules + questions + subquestions by subject_id and type
@@ -351,3 +294,277 @@ exports.getFullQuestionPaperBySubjectAndType = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
+// controllers/questionPaperController.js
+
+
+// Filename: questionPaperController.js
+
+exports.getFullQuestionPaper = async (req, res) => {
+    const { subject, type, set_name, pattern } = req.params;
+
+    try {
+        const [rows] = await dbPool.query(
+            `
+            SELECT 
+                qpc.id AS paper_id,
+                qpc.subject_id,
+                qpc.type,
+                qpc.set_name,
+                qpc.pattern,
+                qpc.title,
+                qpc.code,
+                qpc.exam_date,
+                qpc.time_from,
+                qpc.time_to,
+                qpc.dept,
+                qpc.faculty,
+                qpc.sem,
+                qpc.section,
+                qpc.marks,
+                qpc.scheme,
+                qp.id AS part_id,
+                qp.Module,
+                q.id AS question_id,
+                q.qno,
+                sq.id AS subquestion_id,
+                sq.label,
+                sq.text,
+                sq.marks AS sub_marks,
+                sq.blooms,
+                sq.co,
+                sq.diagram,
+                sq.diagram_path
+            FROM question_paper_config qpc
+            JOIN question_parts qp ON qpc.id = qp.paper_id
+            JOIN questions q ON qp.id = q.part_id
+            JOIN subquestions sq ON q.id = sq.question_id
+            WHERE 
+                qpc.subject_id = ?
+                AND qpc.type = ?
+                AND qpc.set_name = ?
+                AND qpc.pattern = ?
+            ORDER BY qp.Module, q.qno, sq.label
+            `,
+            [subject, type, set_name, pattern]
+        );
+
+        if (rows.length === 0) {
+            // Return 404 if no paper found, as handled by the frontend
+            return res.status(404).json({ success: false, message: 'No question paper found' });
+        }
+
+        // --- Data Grouping and Transformation ---
+        const paperConfig = rows[0];
+        const partsMap = new Map(); // Key: part_id
+
+        rows.forEach((row) => {
+            if (!partsMap.has(row.part_id)) {
+                partsMap.set(row.part_id, {
+                    part_id: row.part_id,
+                    Module: row.Module,
+                    questionsMap: new Map(),
+                    totalMarks: 0, // Initialize total marks for the part
+                });
+            }
+
+            const currentPart = partsMap.get(row.part_id);
+
+            // Group by question number (qno) within the part
+            if (!currentPart.questionsMap.has(row.question_id)) {
+                currentPart.questionsMap.set(row.question_id, {
+                    question_id: row.question_id,
+                    qno: row.qno,
+                    subquestions: [],
+                });
+            }
+
+            // Push subquestion details
+            const currentQuestion = currentPart.questionsMap.get(row.question_id);
+            const subMarks = parseInt(row.sub_marks) || 0;
+            
+            currentQuestion.subquestions.push({
+                subquestion_id: row.subquestion_id,
+                label: row.label,
+                text: row.text,
+                marks: subMarks,
+                blooms: row.blooms,
+                co: row.co,
+                diagram: !!row.diagram,
+                diagram_path: row.diagram_path,
+            });
+
+            // Calculate total marks for the module
+            currentPart.totalMarks += subMarks;
+        });
+
+        // Convert Maps to array structure expected by the frontend
+        const parts = Array.from(partsMap.values()).map(part => ({
+            Module: part.Module,
+            totalMarks: part.totalMarks.toString(), // Ensure it's a string to match frontend state
+            questions: Array.from(part.questionsMap.values()).map(question => ({
+                qno: question.qno,
+                subquestions: question.subquestions,
+            })),
+        }));
+
+
+        res.json({
+            success: true,
+            paper: {
+                id: paperConfig.paper_id,
+                paper_id: paperConfig.paper_id,
+                subject_id: paperConfig.subject_id,
+                type: paperConfig.type,
+                set_name: paperConfig.set_name,
+                pattern: paperConfig.pattern,
+                title: paperConfig.title,
+                code: paperConfig.code,
+                exam_date: paperConfig.exam_date,
+                time_from: paperConfig.time_from,
+                time_to: paperConfig.time_to,
+                dept: paperConfig.dept,
+                faculty: paperConfig.faculty,
+                sem: paperConfig.sem,
+                section: paperConfig.section,
+                marks: paperConfig.marks,
+                scheme: paperConfig.scheme,
+            },
+            parts: parts, // Pass the structured array of parts
+        });
+
+    } catch (error) {
+        console.error('❌ Error fetching question paper:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+
+
+
+
+
+// WARNING: Assuming this is the code for the marks entry API endpoint
+exports.getQuestionPaperByParams = async (req, res) => {
+    try {
+        // Renamed subject_id to subject for consistency with current frontend naming, 
+        // but keep the parameter name as subject_id for clarity.
+        const { subject_id, type, set_name } = req.params; 
+
+        const [rows] = await dbPool.query(
+            `
+            SELECT 
+                qpc.id AS paper_id,
+                qpc.type,
+                qpc.subject_id,
+                qpc.set_name,
+                qpc.pattern,
+                qpc.title,
+                qpc.code,
+                qpc.exam_date,
+                qpc.time_from,
+                qpc.time_to,
+                qpc.dept,
+                qpc.faculty,
+                qpc.sem,
+                qpc.section,
+                qpc.marks AS total_marks_config,
+                qpc.scheme,
+                qp.id AS part_id,
+                qp.module AS Module, -- Use 'Module' for frontend consistency
+                q.id AS question_id,
+                q.qno,
+                sq.id AS subquestion_id,
+                sq.label,
+                sq.text,
+                sq.marks AS sub_marks, -- Renamed to sub_marks
+                sq.co,
+                sq.blooms,
+                sq.diagram,
+                sq.diagram_path
+            FROM question_paper_config qpc
+            JOIN question_parts qp ON qpc.id = qp.paper_id
+            JOIN questions q ON qp.id = q.part_id
+            JOIN subquestions sq ON q.id = sq.question_id
+            WHERE qpc.subject_id = ? 
+              AND qpc.type = ?
+              AND qpc.set_name = ?
+            ORDER BY qp.module, q.qno, sq.label;
+            `,
+            [subject_id, type, set_name]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'No question paper found for given parameters.' });
+        }
+
+        // --- Data Grouping and Transformation (Same logic as before, for consistency) ---
+        const paperConfig = rows[0];
+        const partsMap = new Map();
+
+        rows.forEach((row) => {
+            if (!partsMap.has(row.part_id)) {
+                partsMap.set(row.part_id, {
+                    Module: row.Module,
+                    questionsMap: new Map(),
+                    totalMarks: 0,
+                });
+            }
+
+            const currentPart = partsMap.get(row.part_id);
+
+            if (!currentPart.questionsMap.has(row.question_id)) {
+                currentPart.questionsMap.set(row.question_id, {
+                    qno: row.qno,
+                    subquestions: [],
+                });
+            }
+
+            const currentQuestion = currentPart.questionsMap.get(row.question_id);
+            const subMarks = parseInt(row.sub_marks) || 0;
+            
+            currentQuestion.subquestions.push({
+                label: row.label,
+                text: row.text,
+                marks: subMarks,
+                co: row.co,
+            });
+
+            currentPart.totalMarks += subMarks;
+        });
+
+        const parts = Array.from(partsMap.values()).map(part => ({
+            Module: part.Module,
+            totalMarks: part.totalMarks.toString(),
+            questions: Array.from(part.questionsMap.values()).map(question => ({
+                qno: question.qno,
+                subquestions: question.subquestions,
+            })),
+        }));
+
+
+        res.json({
+            success: true,
+            paper: { // Frontend expects a 'paper' object for config details
+                id: paperConfig.paper_id,
+                subject_id: paperConfig.subject_id,
+                type: paperConfig.type,
+                set_name: paperConfig.set_name,
+                pattern: paperConfig.pattern,
+                title: paperConfig.title,
+                code: paperConfig.code,
+                // Include other config details here
+            },
+            parts: parts, // Frontend expects 'parts' array for questions
+        });
+
+    } catch (error) {
+        console.error('❌ Error fetching question paper:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+};
