@@ -98,6 +98,10 @@ app.use('/api/pso', psoRoutes);
 // Start server
 
 app.use('/api/student-list', studentListRoutes);
+const syllabusRoutes = require("./routes/syllabusRoutes");
+
+app.use("/api/syllabus", syllabusRoutes);
+app.use("/api/curriculum-gap", require("./routes/theoryCurriculumGapRoutes"));
 
 // 🧩 Mount routes
 app.use('/api/lab-timetable', labTimetableRoutes);
