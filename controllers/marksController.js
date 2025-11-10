@@ -106,3 +106,117 @@ exports.getMarksByPaperAndStudent = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch student marks.' });
   }
 };
+
+
+
+const { db } = require('../config/db');
+
+
+
+
+
+
+
+
+exports.saveAssignmentMarks = async (req, res) => {
+  try {
+    const { faculty_id, offering_id, student_id, coMarks, totalMarks } = req.body;
+
+    if (!faculty_id || !offering_id || !student_id || !coMarks) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // 1️⃣ Validate student exists
+    const [studentRows] = await dbPool.query(
+      'SELECT student_id FROM student WHERE student_id = ?',
+      [student_id]
+    );
+    if (studentRows.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // 2️⃣ Get course outcomes for offering
+    const [coRows] = await dbPool.query(
+      'SELECT co_id, co_no FROM course_outcome WHERE offering_id = ?',
+      [offering_id]
+    );
+    if (!coRows.length) {
+      return res.status(404).json({ message: 'No course outcomes found for this offering' });
+    }
+
+    // 3️⃣ Insert or update marks
+    for (const co of coRows) {
+      const marks = coMarks[co.co_no] ?? 0;
+
+      await dbPool.query(
+        `INSERT INTO assignment_marks_entry 
+         (faculty_id, offering_id, student_id, co_id, co_no, marks_awarded, total_marks)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE 
+           marks_awarded = VALUES(marks_awarded),
+           total_marks = VALUES(total_marks),
+           updated_at = CURRENT_TIMESTAMP`,
+        [faculty_id, offering_id, student_id, co.co_id, co.co_no, marks, totalMarks]
+      );
+    }
+
+    res.status(200).json({ message: '✅ Assignment marks saved successfully' });
+  } catch (error) {
+    console.error('❌ Error saving assignment marks:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+// ✅ Get saved assignment marks for a student & offering
+exports.getAssignmentMarks = async (req, res) => {
+  try {
+    const { student_id, offering_id } = req.params;
+
+    const [rows] = await dbPool.query(
+      `SELECT co_no, marks_awarded, total_marks 
+       FROM assignment_marks_entry 
+       WHERE student_id = ? AND offering_id = ?`,
+      [student_id, offering_id]
+    );
+
+    if (!rows.length) {
+      return res.status(200).json([]); // no marks yet
+    }
+
+    // Format data as coMarks object like frontend expects
+    const coMarks = {};
+    rows.forEach((r) => {
+      coMarks[r.co_no] = Number(r.marks_awarded);
+    });
+
+    res.status(200).json({ coMarks, totalMarks: rows[0].total_marks });
+  } catch (error) {
+    console.error("❌ Error fetching assignment marks:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+// ✅ Get total marks per student for a given offering
+exports.getAssignmentTotals = async (req, res) => {
+  try {
+    const { offering_id } = req.params;
+
+    const [rows] = await dbPool.query(
+      `SELECT s.student_id, s.name AS student_name, s.usn,
+              IFNULL(SUM(a.marks_awarded), 0) AS total_marks
+       FROM student s
+       LEFT JOIN assignment_marks_entry a 
+         ON s.student_id = a.student_id AND a.offering_id = ?
+       GROUP BY s.student_id`,
+      [offering_id]
+    );
+
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error("Error fetching total marks:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
