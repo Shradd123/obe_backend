@@ -452,8 +452,9 @@ exports.getFullQuestionPaper = async (req, res) => {
 // WARNING: Assuming this is the code for the marks entry API endpoint
 exports.getQuestionPaperByParams = async (req, res) => {
     try {
-        // Renamed subject_id to subject for consistency with current frontend naming, 
-        // but keep the parameter name as subject_id for clarity.
+        // Assume dbPool is defined and configured for database connection
+        // const dbPool = require('../config/database'); 
+        
         const { subject_id, type, set_name } = req.params; 
 
         const [rows] = await dbPool.query(
@@ -479,10 +480,10 @@ exports.getQuestionPaperByParams = async (req, res) => {
                 qp.module AS Module, -- Use 'Module' for frontend consistency
                 q.id AS question_id,
                 q.qno,
-                sq.id AS subquestion_id,
+                sq.id AS subquestion_id, -- Fetched correctly from DB
                 sq.label,
                 sq.text,
-                sq.marks AS sub_marks, -- Renamed to sub_marks
+                sq.marks AS sub_marks, 
                 sq.co,
                 sq.blooms,
                 sq.diagram,
@@ -503,7 +504,7 @@ exports.getQuestionPaperByParams = async (req, res) => {
             return res.status(404).json({ success: false, message: 'No question paper found for given parameters.' });
         }
 
-        // --- Data Grouping and Transformation (Same logic as before, for consistency) ---
+        // --- Data Grouping and Transformation ---
         const paperConfig = rows[0];
         const partsMap = new Map();
 
@@ -529,10 +530,17 @@ exports.getQuestionPaperByParams = async (req, res) => {
             const subMarks = parseInt(row.sub_marks) || 0;
             
             currentQuestion.subquestions.push({
+                // 🎯 FIX: Include the subquestion_id here
+                subquestion_id: row.subquestion_id, 
+                
                 label: row.label,
                 text: row.text,
                 marks: subMarks,
                 co: row.co,
+                // If the frontend needs these, include them:
+                // blooms: row.blooms,
+                // diagram: row.diagram,
+                // diagram_path: row.diagram_path,
             });
 
             currentPart.totalMarks += subMarks;
@@ -551,14 +559,14 @@ exports.getQuestionPaperByParams = async (req, res) => {
         res.json({
             success: true,
             paper: { // Frontend expects a 'paper' object for config details
-                id: paperConfig.paper_id,
+                paper_id: paperConfig.paper_id, // Use paper_id directly here for consistency
                 subject_id: paperConfig.subject_id,
                 type: paperConfig.type,
                 set_name: paperConfig.set_name,
                 pattern: paperConfig.pattern,
                 title: paperConfig.title,
                 code: paperConfig.code,
-                // Include other config details here
+                // ... include other config details if necessary
             },
             parts: parts, // Frontend expects 'parts' array for questions
         });
