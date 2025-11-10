@@ -5,7 +5,9 @@ const studentController = require('../controllers/studentController');
 //const { getStudentsByOffering } = require('../controllers/studentController');
 
 // Route: GET /api/students/offering/:offering_id
-router.get('/offering/:offering_id', studentController.getStudentsByOffering);
+// router.get('/offering/:offering_id', studentController.getStudentsByOffering);
+router.get('/offering', studentController.getStudentsByOffering);
+
 
 router.get('/section/:sectionId', studentController.getStudentsBySection);
 router.post('/', studentController.addStudent);
