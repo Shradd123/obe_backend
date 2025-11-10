@@ -101,7 +101,7 @@ app.use('/api/student-list', studentListRoutes);
 const syllabusRoutes = require("./routes/syllabusRoutes");
 
 app.use("/api/syllabus", syllabusRoutes);
-app.use("/api/curriculum-gap", require("./routes/theoryCurriculumGapRoutes"));
+// app.use("/api/curriculum-gap", require("./routes/theoryCurriculumGapRoutes"));
 
 // 🧩 Mount routes
 app.use('/api/lab-timetable', labTimetableRoutes);
@@ -119,6 +119,9 @@ const labBeyondSyllabusRoutes = require("./routes/labBeyondSyllabusRoutes");
 app.use("/api/lab", labBeyondSyllabusRoutes);
 const labCoPoRoutes = require('./routes/labCoPoRoutes');
 app.use('/api', labCoPoRoutes);
+const actionTakenRoutes = require("./routes/actionTakenRoutes");
+app.use("/api", actionTakenRoutes);
+
 // const labLessonPlanRoutes = require("./routes/labLessonPlanRoutes");
 // app.use("/api/lab/lesson-plan", labLessonPlanRoutes);
 const labPlanExecutionRoutes = require("./routes/labPlanExecutionRoutes");
