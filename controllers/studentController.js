@@ -1,31 +1,11 @@
-// const { dbPool } = require("../config/db");
-// const bcrypt = require("bcryptjs");
-
-// exports.addStudent = async (req, res) => {
-//   const { name, section_id, email, password, start_year, end_year } = req.body;
-//   try {
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     const [result] = await dbPool.query(
-//       "INSERT INTO student (name, section_id, email, password, start_year, end_year) VALUES (?, ?, ?, ?, ?, ?)",
-//       [name, section_id, email, hashedPassword, start_year, end_year]
-//     );
-//     res.json({ student_id: result.insertId });
-//   } catch (err) {
-//     console.error("Add student error:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
-
-
-
-// controllers/studentController.js
 const { dbPool } = require('../config/db');
 
-exports.getStudentsBySection = async (req, res) => {
+// ---------------------- Get students by section ----------------------
+const getStudentsBySection = async (req, res) => {
   try {
     const { sectionId } = req.params;
     const [rows] = await dbPool.query(
-      `SELECT student_id, name, email, start_year, end_year , usn
+      `SELECT student_id, name, email, start_year, end_year, usn
        FROM STUDENT WHERE section_id = ? ORDER BY name ASC`,
       [sectionId]
     );
@@ -35,7 +15,8 @@ exports.getStudentsBySection = async (req, res) => {
   }
 };
 
-exports.addStudent = async (req, res) => {
+// ---------------------- Add new student ----------------------
+const addStudent = async (req, res) => {
   try {
     const { name, email, password, section_id, start_year, end_year, usn } = req.body;
     const [result] = await dbPool.query(
@@ -45,49 +26,64 @@ exports.addStudent = async (req, res) => {
     );
     res.json({ message: 'Student added', student_id: result.insertId });
   } catch (err) {
-    console.error("Add student error:", err);  // Log error for debugging
+    console.error('Add student error:', err);
     res.status(500).json({ error: 'Failed to add student' });
   }
 };
 
-
-
-// GET students by offering_id
-exports.getStudentsByOffering = async (req, res) => {
-  const { offering_id } = req.params;
-
+// ---------------------- Get students by faculty & offering ----------------------
+const getStudentsByOffering = async (req, res) => {
   try {
-    const [rows] = await dbPool.query(
-      `
-      SELECT 
-          s.student_id,
-          s.name AS student_name,
-          s.usn,
-          s.email,
-          sec.section_id,
-          sec.name AS section_name,
-          b.batch_id,
-          b.name AS batch_name,
-          co.offering_id
-      FROM course_offering co
-      JOIN batch b ON co.batch_id = b.batch_id
-      JOIN section sec ON sec.batch_id = b.batch_id
-      JOIN student s ON s.section_id = sec.section_id
-      WHERE co.offering_id = ?;
-      `,
-      [offering_id]
-    );
+    const { faculty_id, offering_id } = req.query;
 
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'No students found for this offering ID' });
+
+    if (!faculty_id || !offering_id) {
+      return res.status(400).json({
+        message: 'Missing required query parameters: faculty_id and offering_id',
+      });
     }
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error fetching students:', err);
-    res.status(500).json({ error: 'Server error fetching students' });
+    const query = `
+      SELECT
+        s.student_id,
+        s.name AS student_name,
+        s.usn,
+        s.email,
+        sec.section_id,
+        sec.name AS section_name,
+        b.batch_id,
+        b.name AS batch_name,
+        co.offering_id
+      FROM student s
+      JOIN section sec ON s.section_id = sec.section_id
+      JOIN course_teaching_assignment cta ON cta.section_id = sec.section_id
+      JOIN course_offering co ON cta.offering_id = co.offering_id
+      JOIN batch b ON co.batch_id = b.batch_id
+      WHERE co.offering_id = ? 
+        AND cta.faculty_id = ?;
+    `;
+
+    const [rows] = await dbPool.query(query, [offering_id, faculty_id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        message: 'No students found for the given faculty and offering',
+      });
+    }
+
+    return res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching students:', error);
+    return res.status(500).json({
+      message: 'Internal server error while fetching students',
+      error: error.message,
+    });
   }
 };
 
-// module.exports = { getStudentsByOffering };
-
+// ✅ Export all controller functions properly
+module.exports = {
+  getStudentsBySection,
+  addStudent,
+  getStudentsByOffering,
+};
