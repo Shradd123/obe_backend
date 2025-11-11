@@ -92,6 +92,9 @@ const lessonPlanRoutes = require('./routes/lessonPlanRoutes');
 app.use('/api/lesson-plan', lessonPlanRoutes);
 
 //pso routes
+const labCourseClosureRoutes = require('./routes/labCourseClosureRoutes');
+app.use('/api/lab-course-closure', labCourseClosureRoutes);
+
 
 const psoRoutes = require('./routes/psoRoutes');
 app.use('/api/pso', psoRoutes);
