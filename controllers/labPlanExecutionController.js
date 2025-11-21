@@ -181,7 +181,7 @@ const getLabPlanExecution = async (req, res) => {
       `
       SELECT 
         ls.id AS syllabus_id,
-        ls.exp_no AS exp_no,                       -- ✅ consistent alias
+        ls.exp_no AS exp_no,                     
         ls.statement AS name,
         COALESCE(lpe.planning_date, '') AS planningDate,
         COALESCE(lpe.execution_date, '') AS executionDate,

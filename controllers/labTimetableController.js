@@ -43,8 +43,7 @@ exports.getLabTimetablesByOffering = (req, res) => {
       lt.file_path,
       lt.uploaded_at
     FROM lab_timetable lt
-    JOIN course_offering co ON co.course_id = lt.course_id
-    WHERE co.offering_id = ?
+    WHERE lt.offering_id = ?
     ORDER BY lt.uploaded_at DESC
   `;
 

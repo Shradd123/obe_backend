@@ -48,6 +48,9 @@ exports.loginAdmin = (req, res) => {
 // ------------------------
 // SIGNUP ADMIN
 // ------------------------
+// ------------------------
+// SIGNUP ADMIN (FIXED)
+// ------------------------
 exports.signupAdmin = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -57,7 +60,6 @@ exports.signupAdmin = async (req, res) => {
 
   adminModel.getAdminByEmail(email, async (err, results) => {
     if (err) {
-      console.error('Signup DB error:', err);
       return res.status(500).json({ message: 'Database error', error: err });
     }
 
@@ -68,18 +70,33 @@ exports.signupAdmin = async (req, res) => {
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      adminModel.insertAdmin(name, email, hashedPassword, (err) => {
+      adminModel.insertAdmin(name, email, hashedPassword, (err, insertResult) => {
         if (err) {
-          console.error('Insert admin error:', err);
           return res.status(500).json({ message: 'Failed to create admin', error: err });
         }
 
-        res.status(201).json({ message: 'Admin registered successfully' });
+        // Get inserted admin ID
+        const newAdminId = insertResult.insertId;
+
+        // Create token
+        const token = jwt.sign(
+          { email, role: 'admin', name },
+          SECRET_KEY,
+          { expiresIn: '1h' }
+        );
+
+        res.status(201).json({
+          message: 'Admin registered successfully',
+          token,
+          email,
+          name,
+          admin_id: newAdminId
+        });
       });
 
     } catch (hashErr) {
-      console.error('Password hash error:', hashErr);
       return res.status(500).json({ message: 'Server error during password hashing' });
     }
   });
 };
+
