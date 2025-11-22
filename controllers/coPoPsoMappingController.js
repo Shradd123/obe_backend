@@ -223,20 +223,33 @@ exports.getPSOs = (req, res) => {
 // ======================================================
 // 4️⃣ Get existing CO–PO–PSO mappings by offering_id
 // ======================================================
+// controllers/coPoPsoMappingController.js
+
 exports.getMappings = (req, res) => {
   const { offering_id } = req.params;
 
   const query = `
-    SELECT * 
-    FROM co_po_pso_mapping 
-    WHERE offering_id = ?
+    SELECT 
+      m.offering_id,
+      m.co_id, c.co_no,
+      m.po_id, p.po_no,
+      m.pso_id, ps.title AS pso_title,
+      m.weight,
+      m.justification
+    FROM co_po_pso_mapping m
+    LEFT JOIN course_outcome c ON m.co_id = c.co_id
+    LEFT JOIN po p ON m.po_id = p.po_id
+    LEFT JOIN pso ps ON m.pso_id = ps.pso_id
+    WHERE m.offering_id = ?
   `;
 
-  db.query(query, [offering_id], (err, results) => {
+  db.query(query, [offering_id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(results);
+
+    res.json(result);
   });
 };
+
 
 // ======================================================
 // 5️⃣ Save/Update CO–PO–PSO Mappings
