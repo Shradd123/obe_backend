@@ -86,3 +86,35 @@ exports.deletePO = async (req, res) => {
     res.status(500).json({ error: "Failed to delete PO" });
   }
 };
+
+
+exports.getPOsAndPSOsByCourse = (req, res) => {
+  const { courseId } = req.params;
+
+  const queryPO = `
+    SELECT po_id, po_no, title, description 
+    FROM po
+    WHERE dept_id = (
+      SELECT dept_id FROM course_offering WHERE offering_id = ?
+    )`;
+
+  const queryPSO = `
+    SELECT pso_id, title, description 
+    FROM pso
+    WHERE dept_id = (
+      SELECT dept_id FROM course_offering WHERE offering_id = ?
+    )`;
+
+  db.query(queryPO, [courseId], (err, poResults) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.query(queryPSO, [courseId], (err2, psoResults) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+
+      res.json({
+        POs: poResults,
+        PSOs: psoResults
+      });
+    });
+  });
+};

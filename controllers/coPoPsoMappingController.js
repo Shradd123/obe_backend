@@ -177,14 +177,17 @@ exports.getCourseOutcomes = (req, res) => {
 // ======================================================
 // 2️⃣ Get POs by offering_id  ✅ (auto-detect dept from offering)
 // ======================================================
+
+
 exports.getPOs = (req, res) => {
   const { offering_id } = req.params;
 
   const query = `
     SELECT po.po_id, po.po_no, po.title
     FROM po
-    JOIN course_offering co ON po.dept_id = co.dept_id
-    WHERE co.offering_id = ?
+    JOIN course_offering co ON co.offering_id = ?
+    JOIN course c ON c.course_id = co.course_id
+    ORDER BY po.po_no;
   `;
 
   db.query(query, [offering_id], (err, results) => {
@@ -193,17 +196,22 @@ exports.getPOs = (req, res) => {
   });
 };
 
+
+
 // ======================================================
 // 3️⃣ Get PSOs by offering_id  ✅ (auto-detect dept from offering)
 // ======================================================
+
+
 exports.getPSOs = (req, res) => {
   const { offering_id } = req.params;
 
   const query = `
-    SELECT pso.pso_id, pso.title
+    SELECT pso.pso_id, pso.title, pso.description
     FROM pso
-    JOIN course_offering co ON pso.dept_id = co.dept_id
-    WHERE co.offering_id = ?
+    JOIN course_offering co ON co.offering_id = ?
+    JOIN course c ON c.course_id = co.course_id
+    ORDER BY pso.pso_id;
   `;
 
   db.query(query, [offering_id], (err, results) => {

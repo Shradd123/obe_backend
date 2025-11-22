@@ -9,5 +9,6 @@ router.get("/course/:offering_id", poController.getPOsByCourse);
 router.post("/", poController.createPO);
 router.put("/:id", poController.updatePO);
 router.delete("/:id", poController.deletePO);
+router.get("/po/course/:courseId", poController.getPOsAndPSOsByCourse);
 
 module.exports = router;
