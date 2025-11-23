@@ -95,11 +95,12 @@ app.use('/api/lesson-plan', lessonPlanRoutes);
 const labCourseClosureRoutes = require('./routes/labCourseClosureRoutes');
 app.use('/api/lab-course-closure', labCourseClosureRoutes);
 
-
+const labCourseFileRoutes = require('./routes/labCourseFileRoutes');
+app.use('/api', labCourseFileRoutes);
 const psoRoutes = require('./routes/psoRoutes');
 app.use('/api/pso', psoRoutes);
 // Start server
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use('/api/student-list', studentListRoutes);
 const syllabusRoutes = require("./routes/syllabusRoutes");
 

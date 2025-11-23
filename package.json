@@ -12,6 +12,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
+    "pdf-merger-js": "^5.1.2",
     "pdfjs-dist": "^5.4.149"
   },
   "name": "backend",
