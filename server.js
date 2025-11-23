@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
-
+const fs = require('fs'); 
+const multer = require('multer');
 const teachingAssignmentRoutes = require("./routes/teachingAssignmentRoutes");
 const courseCoverRoutes = require("./routes/courseCoverRoutes");
 const visionMissionRoutes = require('./routes/visionMissionRoutes');
@@ -14,7 +15,15 @@ const poRoutes = require('./routes/poRoutes'); // ✅ PO routes
 
 const app = express();
 const PORT = 5001;
-
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'uploads')); // Make sure 'uploads' folder exists
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+const upload = multer({ storage });
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -125,10 +134,14 @@ const labCoPoRoutes = require('./routes/labCoPoRoutes');
 app.use('/api', labCoPoRoutes);
 const actionTakenRoutes = require("./routes/actionTakenRoutes");
 app.use("/api", actionTakenRoutes);
-
+const theoryCourseFileRoutes = require('./routes/theoryCourseFileRoutes');
+app.use('/api/theory-course-files', theoryCourseFileRoutes);
 // const labLessonPlanRoutes = require("./routes/labLessonPlanRoutes");
 // app.use("/api/lab/lesson-plan", labLessonPlanRoutes);
 const labPlanExecutionRoutes = require("./routes/labPlanExecutionRoutes");
+const { uploadController } = require('./controllers/theoryCourseFileController');
+app.post('/api/theory-course-files/upload', upload.single('file'), uploadController);
+
 app.use("/api/lab-plan-execution", labPlanExecutionRoutes);
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
