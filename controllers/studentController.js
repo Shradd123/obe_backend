@@ -36,7 +36,6 @@ const getStudentsByOffering = async (req, res) => {
   try {
     const { faculty_id, offering_id } = req.query;
 
-
     if (!faculty_id || !offering_id) {
       return res.status(400).json({
         message: 'Missing required query parameters: faculty_id and offering_id',
@@ -65,13 +64,7 @@ const getStudentsByOffering = async (req, res) => {
 
     const [rows] = await dbPool.query(query, [offering_id, faculty_id]);
 
-    if (rows.length === 0) {
-      return res.status(404).json({
-        message: 'No students found for the given faculty and offering',
-      });
-    }
-
-    return res.status(200).json(rows);
+    return res.status(200).json(rows || []);  // 👈 Always return array
   } catch (error) {
     console.error('Error fetching students:', error);
     return res.status(500).json({
@@ -80,6 +73,7 @@ const getStudentsByOffering = async (req, res) => {
     });
   }
 };
+
 
 // ✅ Export all controller functions properly
 module.exports = {

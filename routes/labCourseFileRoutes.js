@@ -96,7 +96,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
-const PDFMerger = require('pdf-merger-js').default;
+
 
 const { dbPool } = require('../config/db');
 
@@ -118,6 +118,8 @@ router.get('/lab-course-files/:offering_id', getLabCourseFiles);
 /* ✅ MERGE + SAVE TO DATABASE */
 router.post('/lab-course-files/merge-pdf', async (req, res) => {
   try {
+    const { default: PDFMerger } = await import('pdf-merger-js');
+
     const { files, offering_id, faculty_id } = req.body;
 
     if (!files || files.length === 0) {
@@ -141,19 +143,17 @@ router.post('/lab-course-files/merge-pdf', async (req, res) => {
 
     await merger.save(mergedPath);
 
-    // Save merged file in DB
     const [result] = await dbPool.query(
       `INSERT INTO lab_course_files (offering_id, faculty_id, file_name, file_path)
        VALUES (?, ?, ?, ?)`,
       [offering_id, faculty_id, mergedFileName, mergedPath]
     );
 
-    // ✅ Return a relative URL for frontend
     res.json({
       success: true,
       message: "PDFs merged and saved successfully",
       file_id: result.insertId,
-      mergedFileURL: `/uploads/lab-course-files/${mergedFileName}` // ✅ key frontend expects
+      mergedFileURL: `/uploads/lab-course-files/${mergedFileName}`
     });
 
   } catch (error) {
@@ -164,6 +164,7 @@ router.post('/lab-course-files/merge-pdf', async (req, res) => {
     });
   }
 });
+
 
 
 module.exports = router;

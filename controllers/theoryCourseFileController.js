@@ -60,7 +60,7 @@
 const { dbPool } = require('../config/db');
 const path = require('path');
 const fs = require('fs');
-const PDFMerger = require('pdf-merger-js').default; // ✅ use .default
+// const PDFMerger = require('pdf-merger-js').default; // ✅ use .default
 
 // ==========================
 // Upload single PDF
@@ -79,6 +79,10 @@ const uploadController = (req, res) => {
 // ==========================
 const mergePDFs = async (req, res) => {
   try {
+
+     // ✅ Load pdf-merger-js dynamically (allowed in CommonJS)
+    const { default: PDFMerger } = await import('pdf-merger-js');
+
     const { files, offering_id, faculty_id } = req.body;
 
     if (!files || !files.length) {
