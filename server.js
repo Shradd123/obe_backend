@@ -50,6 +50,18 @@ const courseOfferingRoutes = require("./routes/courseOfferingRoutes");
 app.use('/', deptRoutes);
 app.use('/api', require('./routes/deptRoutes'));
 
+const examTotalMarksRoutes = require("./routes/examTotalMarksRoutes");
+
+const coTargetRoutes = require('./routes/coTargetRoutes');
+
+
+
+// Routes
+app.use('/api/co-target', coTargetRoutes);
+
+
+app.use("/api/exam-total-marks", examTotalMarksRoutes);
+
 app.use('/api/admin', adminRoutes);
 app.use('/api/departments', deptRoutes);
 app.use('/api/programs', programRoutes);
