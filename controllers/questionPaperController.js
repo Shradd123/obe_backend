@@ -9,35 +9,34 @@ const formatDate = (dateString) => {
 
 // ---------------------- CREATE QUESTION PAPER ----------------------
 exports.createQuestionPaper = async (req, res) => {
-  const connection = await dbPool.getConnection();
-  try {
-    const { paper, parts } = req.body;
+    const connection = await dbPool.getConnection();
+    try {
+        const { paper, parts } = req.body;
 
-    await connection.beginTransaction();
+        await connection.beginTransaction();
 
-    const [paperResult] = await connection.query(
-      `INSERT INTO question_paper_config 
+        const [paperResult] = await connection.query(
+            `INSERT INTO question_paper_config 
       (type, subject_id, set_name, pattern, title, code, exam_date, time_from, time_to, dept, faculty, sem, section, marks, scheme)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        paper.type,
-        paper.subject_id,
-        paper.set_name,
-        paper.pattern,
-        paper.title,
-        paper.code,
-        formatDate(paper.exam_date), // ✅ formatted
-        paper.time_from,
-        paper.time_to,
-        paper.dept,
-        paper.faculty,
-        paper.sem,
-        paper.section,
-        paper.marks,
-        paper.scheme
-      ]
-    );
-
+            [
+                paper.type,
+                paper.subject_id,
+                paper.set_name,
+                paper.pattern,
+                paper.title,
+                paper.code,
+                formatDate(paper.exam_date), // Will now receive the value from the frontend's exam_date field
+                paper.time_from,             // Will now receive the value from the frontend's time_from field
+                paper.time_to,               // Will now receive the value from the frontend's time_to field
+                paper.dept,
+                paper.faculty,
+                paper.sem,
+                paper.section,
+                paper.marks,
+                paper.scheme
+            ]
+        );
     const paperId = paperResult.insertId;
 
     // Insert parts, questions, subquestions
